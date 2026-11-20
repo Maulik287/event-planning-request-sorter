@@ -135,10 +135,92 @@ def milestone_1() -> Dict[str, Any]:
     }
 
 
+# ==============================================================================
+# Milestone 2: Configure GPT-2 Extended Tokenizer & Model
+# ==============================================================================
+
+def configure_gpt2(
+    model_name: str = "gpt2",
+    custom_tokens: Optional[List[str]] = None,
+    is_tiny: bool = False,
+) -> Tuple[Any, Any]:
+    """Configure GPT-2 with an extended tokenizer and model containing custom tokens.
+
+    Args:
+        model_name: Pretrained model identifier or path.
+        custom_tokens: List of special tokens representing event request categories.
+        is_tiny: When True, initializes a tiny lightweight GPT-2 architecture suitable
+                 for rapid testing, CI validation, and constrained environments.
+
+    Returns:
+        Tuple of (extended_tokenizer, configured_model)
+    """
+    from transformers import AutoModelForCausalLM, AutoTokenizer, GPT2Config, GPT2LMHeadModel, GPT2Tokenizer
+
+    tokens_to_add = custom_tokens if custom_tokens is not None else list(SPECIAL_TOKENS)
+
+    # 1. Initialize tokenizer
+    try:
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
+    except Exception:
+        tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
+
+    # Set pad_token if not already set (GPT-2 standard has no pad token)
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
+
+    # 2. Add custom special tokens for request classification
+    if tokens_to_add:
+        special_tokens_dict = {"additional_special_tokens": tokens_to_add}
+        tokenizer.add_special_tokens(special_tokens_dict)
+
+    # 3. Initialize or load GPT-2 model
+    if is_tiny:
+        config = GPT2Config(
+            vocab_size=len(tokenizer),
+            n_positions=128,
+            n_embd=64,
+            n_layer=2,
+            n_head=2,
+            bos_token_id=tokenizer.bos_token_id or 50256,
+            eos_token_id=tokenizer.eos_token_id or 50256,
+            pad_token_id=tokenizer.pad_token_id or 50256,
+        )
+        model = GPT2LMHeadModel(config)
+    else:
+        try:
+            model = AutoModelForCausalLM.from_pretrained(model_name)
+        except Exception:
+            # Fallback to direct GPT2LMHeadModel
+            model = GPT2LMHeadModel.from_pretrained(model_name)
+        # Resize token embeddings to include all newly added special tokens
+        model.resize_token_embeddings(len(tokenizer))
+
+    # Synchronize pad token id in model config
+    model.config.pad_token_id = tokenizer.pad_token_id
+
+    return tokenizer, model
+
+
 # --- Milestone 2: Configure GPT-2 with an extended tokenizer and model for custom tokens.
 # Hint: Extend the tokenizer and configure the GPT-2 model to recognize your custom tokens.
-def milestone_2():  # TODO(milestone 2)
-    raise NotImplementedError("TODO(milestone 2)")
+def milestone_2(model_name: str = "gpt2", is_tiny: bool = True) -> Dict[str, Any]:
+    """Execute Milestone 2: Configure GPT-2 with extended tokenizer and custom tokens."""
+    tokenizer, model = configure_gpt2(model_name=model_name, custom_tokens=SPECIAL_TOKENS, is_tiny=is_tiny)
+
+    token_ids = {tok: tokenizer.convert_tokens_to_ids(tok) for tok in SPECIAL_TOKENS}
+    embedding_size = model.get_input_embeddings().weight.shape[0]
+
+    return {
+        "tokenizer": tokenizer,
+        "model": model,
+        "vocab_size": len(tokenizer),
+        "embedding_size": embedding_size,
+        "custom_tokens": list(SPECIAL_TOKENS),
+        "token_ids": token_ids,
+        "pad_token_id": tokenizer.pad_token_id,
+    }
+
 
 
 # --- Milestone 3: Train the model on the example requests using the Hugging Face Trainer.

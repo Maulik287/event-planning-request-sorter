@@ -16,7 +16,7 @@ Tick these off as you go, and commit after each one.
 
 - [x] **1. Define common event request types and create a small dataset of example requests.**  
       Hint: Define special tokens for your request types, similar to how legal tags were defined.
-- [ ] **2. Configure GPT-2 with an extended tokenizer and model for custom tokens.**  
+- [x] **2. Configure GPT-2 with an extended tokenizer and model for custom tokens.**  
       Hint: Extend the tokenizer and configure the GPT-2 model to recognize your custom tokens.
 - [ ] **3. Train the model on the example requests using the Hugging Face Trainer.**  
       Hint: Use the Hugging Face Trainer to fine-tune your model on the prepared dataset.

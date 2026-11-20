@@ -10,7 +10,9 @@ from app.core import (
     RAW_EVENT_REQUESTS,
     create_event_dataset,
     format_prompt,
+    configure_gpt2,
     milestone_1,
+    milestone_2,
 )
 
 # Milestone 1: Define common event request types and create a small dataset of example requests.
@@ -51,9 +53,28 @@ def test_milestone_1():
 
 
 # Milestone 2: Configure GPT-2 with an extended tokenizer and model for custom tokens.
-@pytest.mark.skip(reason="remove this line when you start milestone 2")
 def test_milestone_2():
-    raise NotImplementedError("write the test for milestone 2")
+    # 1. Execute milestone_2 configuration
+    res = milestone_2(is_tiny=True)
+    tokenizer = res["tokenizer"]
+    model = res["model"]
+
+    # 2. Check tokenizer vocab size and model embedding size match
+    assert res["vocab_size"] == res["embedding_size"]
+    assert res["vocab_size"] >= 50257 + len(SPECIAL_TOKENS)
+
+    # 3. Check that custom tokens are individually recognized as single tokens
+    for token in SPECIAL_TOKENS:
+        token_id = tokenizer.convert_tokens_to_ids(token)
+        assert token_id is not None
+        assert token_id >= 50257
+        # Tokenizing the token should produce a single ID
+        encoded = tokenizer.encode(token, add_special_tokens=False)
+        assert encoded == [token_id]
+
+    # 4. Check pad token configuration
+    assert tokenizer.pad_token is not None
+    assert model.config.pad_token_id == tokenizer.pad_token_id
 
 
 # Milestone 3: Train the model on the example requests using the Hugging Face Trainer.
