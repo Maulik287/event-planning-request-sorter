@@ -14,7 +14,7 @@ The 'Event Planning Request Sorter' is a tool designed to streamline the workflo
 
 Tick these off as you go, and commit after each one.
 
-- [ ] **1. Define common event request types and create a small dataset of example requests.**  
+- [x] **1. Define common event request types and create a small dataset of example requests.**  
       Hint: Define special tokens for your request types, similar to how legal tags were defined.
 - [ ] **2. Configure GPT-2 with an extended tokenizer and model for custom tokens.**  
       Hint: Extend the tokenizer and configure the GPT-2 model to recognize your custom tokens.

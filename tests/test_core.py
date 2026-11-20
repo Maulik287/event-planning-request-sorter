@@ -4,10 +4,50 @@ They start skipped. Remove the `skip` line as you work on each milestone.
 """
 import pytest
 
+from app.core import (
+    EVENT_REQUEST_TYPES,
+    SPECIAL_TOKENS,
+    RAW_EVENT_REQUESTS,
+    create_event_dataset,
+    format_prompt,
+    milestone_1,
+)
+
 # Milestone 1: Define common event request types and create a small dataset of example requests.
-@pytest.mark.skip(reason="remove this line when you start milestone 1")
 def test_milestone_1():
-    raise NotImplementedError("write the test for milestone 1")
+    # 1. Verify defined request types
+    assert "venue_inquiry" in EVENT_REQUEST_TYPES
+    assert "catering_request" in EVENT_REQUEST_TYPES
+    assert "entertainment_av" in EVENT_REQUEST_TYPES
+    assert "decor_styling" in EVENT_REQUEST_TYPES
+    assert "budget_pricing" in EVENT_REQUEST_TYPES
+    assert "logistics_scheduling" in EVENT_REQUEST_TYPES
+
+    # 2. Check special tokens formatting
+    for name, token in EVENT_REQUEST_TYPES.items():
+        assert token.startswith("<|") and token.endswith("|>")
+        assert token in SPECIAL_TOKENS
+
+    # 3. Test prompt formatting
+    sample_text = "We need an outdoor garden for 100 guests."
+    sample_token = "<|venue_inquiry|>"
+    prompt = format_prompt(sample_text, sample_token)
+    assert sample_text in prompt
+    assert sample_token in prompt
+    assert "<|endoftext|>" in prompt
+
+    # 4. Check dataset generation and diversity
+    dataset = create_event_dataset()
+    assert len(dataset) >= 30
+    categories = set(d["label"] for d in dataset)
+    assert len(categories) == len(EVENT_REQUEST_TYPES)
+
+    # 5. Check milestone_1 output
+    res = milestone_1()
+    assert res["num_examples"] == len(dataset)
+    assert len(res["special_tokens"]) == len(SPECIAL_TOKENS)
+    assert res["num_examples"] >= 40
+
 
 
 # Milestone 2: Configure GPT-2 with an extended tokenizer and model for custom tokens.
